@@ -1,0 +1,40 @@
+name: Versionamento Automatico
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  versionamento:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Verificar versao atual
+        run: cat version.txt
+
+      - name: Incrementar versao
+        run: |
+          VERSION=$(cat version.txt)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "$NEW_VERSION" > version.txt
+          echo "Nova versao: $NEW_VERSION"
+
+      - name: Commit da nova versao
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add version.txt
+          git commit -m "Atualiza versao automaticamente [skip ci]"
+          git push
